@@ -37,9 +37,13 @@ class Stream
   end
 
   def <<(x)
-    @reservoir << x
-    init_values(x) if @n.nil?
-    update_values(x)
+    @last = x
+    @last_f = x.to_f
+
+    @reservoir << @last_f
+    init_values(@last_f) if @n.nil?
+    update_values(@last_f)
+
     x
   end
 
@@ -68,7 +72,6 @@ class Stream
   def update_values(x)
     @n += 1
 
-    @last = x
     @sum += x
     @min = x if @min > x
     @max = x if @max < x
@@ -137,8 +140,7 @@ o.first
 
 ARGF.each_line do |line|
   break if line.nil?
-  k = line.strip.to_f
-  s << k
+  s << line.strip
   o.next
 end
 
