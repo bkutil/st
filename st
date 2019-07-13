@@ -30,118 +30,111 @@ class Reservoir
 end
 
 class Stream
-  attr_reader :last
-
   def initialize(reservoir:)
     @reservoir = reservoir
+
+    @count = 0
+    @last = nil
+    @sum = 0
+    @min = Float::INFINITY
+    @max = -Float::INFINITY
+    @mean = 0
+    @m2 = 0
+
+    @q = { q10: 0.1, q25: 0.25, q50: 0.5, q75: 0.75, q90: 0.9, q99: 0.99 }
   end
 
   def <<(x)
     @last = x
-    @last_f = x.to_f
+    @reservoir << x.to_f
 
-    @reservoir << @last_f
-    init_values(@last_f) if @n.nil?
-    update_values(@last_f)
+    update_values(x.to_f)
 
     x
   end
 
-  def to_s
-    JSON.pretty_generate(
-      count: @n,
+  def data
+    {
+      count: @count,
       sum: @sum,
       min: @min,
       max: @max,
       mean: @mean,
-      std: @m2 / @n,
-      q: quantiles.zip(@reservoir.data.sort.values_at(*percentiles)).to_h
-    )
+      std: @count.zero? ? @count : @m2 / @count,
+      last: @last,
+    }.merge(quantiles)
   end
 
   private
 
   def quantiles
-    [0.1, 0.25, 0.5, 0.75, 0.9, 0.99]
-  end
+    data = @reservoir.data.sort
 
-  def percentiles
-    quantiles.map { |q| (q * @reservoir.size).floor }
+    @q.map do |q, at|
+      [q, (at * @reservoir.size).floor]
+    end.map do |q, index|
+      [q, data[index]]
+    end.to_h
   end
 
   def update_values(x)
-    @n += 1
+    @count += 1
 
     @sum += x
     @min = x if @min > x
     @max = x if @max < x
 
-    delta = x - @mean
-    delta_n = delta / @n
+    delta = x.to_f - @mean
+    delta_n = delta / @count
 
     @mean += delta_n
     @m2 += (delta * (delta - delta_n))
-  end
-
-  def init_values(x)
-    @n = 0
-    @sum = 0
-    @min = x
-    @max = x
-    @mean = 0
-    @m2 = 0
   end
 end
 
 class Output
   def initialize(stream:)
-    @t = Time.now
     @s = stream
-    @tty = $stdout.tty?
+    @f = %i(last count sum mean std min max q10 q25 q50 q75 q90 q99)
   end
 
-  def first
-    clear unless @tty
+  def to_s
+    @f.map { |field| @s.data[field] }.compact.join(",")
   end
+end
 
-  def last
-    clear unless @tty
-    print
-  end
+if $stdin.tty?
+  puts <<~EOF
+    Usage: echo $RANDOM | st
 
-  def next
-    puts @s.last
+    st accepts list of numbers, one number per line. The output is a comma separated list of statistics:
 
-    return if @tty
-    return if (Time.now - @t).to_f < 0.2
+    position   statistic
+    1          last
+    2          count
+    3          sum
+    4          mean
+    5          std
+    6          min
+    7          max
+    8          q10
+    9          q25
+    10         q50
+    11         q75
+    12         q90
+    13         q99
 
-    clear
-    print
+    last is the input value, q10 to q99 are quantiles.
+  EOF
 
-    @t = Time.now
-  end
-
-  private
-
-  def print
-    $stderr.printf @s.to_s
-  end
-
-  def clear
-    $stderr.printf "\033[2J"
-    $stderr.printf "\033[1;1H"
-  end
+  exit
 end
 
 s = Stream.new(reservoir: Reservoir.new)
 o = Output.new(stream: s)
 
-o.first
-
 ARGF.each_line do |line|
   break if line.nil?
   s << line.strip
-  o.next
+  puts o
 end
-
-o.last
