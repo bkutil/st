@@ -66,7 +66,7 @@ class Stream
   end
 
   def percentiles
-    quantiles.map { |q| (q * @reservoir.size).round }
+    quantiles.map { |q| (q * @reservoir.size).floor }
   end
 
   def update_values(x)
