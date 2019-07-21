@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'json'
-
 class Reservoir
   attr_reader :data
 
