@@ -102,7 +102,7 @@ class Output
 end
 
 if $stdin.tty?
-  puts <<~EOF
+  warn <<~EOF
     Usage: echo $RANDOM | st
 
     st accepts list of numbers, one number per line. The output is a comma separated list of statistics:
