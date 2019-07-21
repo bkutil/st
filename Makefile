@@ -1,4 +1,8 @@
 test:
 	./st_test
 
-.PHONY: test
+style:
+	diction -s README.md
+	style README.md
+
+.PHONY: test style
