@@ -128,6 +128,10 @@ if $stdin.tty?
   exit
 end
 
+# Handle closed pipes and interrupts
+Signal.trap("SIGPIPE", "SYSTEM_DEFAULT")
+Signal.trap("SIGINT", "SYSTEM_DEFAULT")
+
 s = Stream.new(reservoir: Reservoir.new)
 o = Output.new(stream: s)
 
