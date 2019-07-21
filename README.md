@@ -2,8 +2,6 @@
 
 Computes summary statistics from the command line.
 
-Given numerical input, outputs current summary statistics:
-
 For every input line, a line is printed to standard output, with comma
 separated current statistics values. It follows this format:
 
@@ -27,8 +25,7 @@ separated current statistics values. It follows this format:
 This can be then parsed using `cut`.
 
 For quantile estimation, `st` samples the input using naive Reservoir
-sampling algorithm, in order to save memory. The sample size is pre-set
-at 1024 samples.
+sampling algorithm, to save memory. The sample size is pre-set to 1024.
 
 ## Installation
 
