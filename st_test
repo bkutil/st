@@ -1,0 +1,62 @@
+#! /bin/sh
+# file: test/st_test.sh
+
+oneTimeSetUp() {
+  outputDir="${SHUNIT_TMPDIR}/output"
+  stdoutFile="${outputDir}/stdout"
+  stderrFile="${outputDir}/stderr"
+
+  cmd='./st'
+
+  mkdir ${outputDir}
+}
+
+tearDown() {
+  rm -fr "${testDir}"
+}
+
+testRuns() {
+  ${cmd} >${stdoutFile} 2>${stderrFile}
+  retCode=$?
+  assertTrue 'expecting return code of 0 (true)' ${retCode}
+}
+
+testHelp() {
+  ${cmd} >${stdoutFile} 2>${stderrFile}
+  retCode=$?
+  hasHelp=$(cat ${stderrFile} | grep -c Usage)
+  assertTrue 'expecting return code of 0 (true)' ${retCode}
+  assertEquals 'outputs help text without input' ${hasHelp} 1
+}
+
+testEmptyInput() {
+  echo | ${cmd} >${stdoutFile} 2>${stderrFile}
+  retCode=$?
+  stdOut=$(cat ${stdoutFile})
+  assertTrue 'expecting return code of 0 (true)' ${retCode}
+  assertTrue 'output is empty' "[ -z ${stdOut} ]"
+}
+
+testOneDigit() {
+  echo 1 | ${cmd} >${stdoutFile} 2>${stderrFile}
+  retCode=$?
+  lastLine=$(cat ${stdoutFile} | tail -1)
+
+  assertTrue 'expecting return code of 0 (true)' ${retCode}
+  assertEquals 'outputs a single line with statisitcs' ${lastLine} "1,1,1.0,1.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0"
+}
+
+testSequence() {
+  for i in $(seq 1 1 5); do echo $i; done | ${cmd} >${stdoutFile} 2>${stderrFile}
+  retCode=$?
+  lineCount=$(cat ${stdoutFile} | wc -l)
+  lastLine=$(cat ${stdoutFile} | tail -1)
+  sum=$(echo ${lastLine} | cut -d, -f3)
+
+  assertTrue 'expecting return code of 0 (true)' ${retCode}
+  assertEquals 'outputs a line for every input' ${lineCount} 5
+  assertEquals 'gets at least one stat right' ${sum} "15.0"
+}
+
+# Load and run shUnit2.
+. ./.shunit2
