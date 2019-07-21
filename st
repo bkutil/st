@@ -133,6 +133,10 @@ o = Output.new(stream: s)
 
 ARGF.each_line do |line|
   break if line.nil?
-  s << line.strip
-  puts o
+  l = line.strip
+
+  unless l.empty?
+    s << l
+    puts o
+  end
 end
