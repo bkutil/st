@@ -97,7 +97,8 @@ class Output
   end
 
   def to_s
-    @f.map { |field| @s.data[field] }.compact.join(",")
+    current_data = @s.data
+    @f.map { |field| current_data[field] }.compact.join(",")
   end
 end
 
