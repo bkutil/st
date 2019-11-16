@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require 'ruby-prof'
+
 class Reservoir
   attr_reader :data
 
@@ -128,6 +130,8 @@ if $stdin.tty?
   exit
 end
 
+RubyProf.start
+
 # Handle closed pipes and interrupts
 Signal.trap("SIGPIPE", "SYSTEM_DEFAULT")
 Signal.trap("SIGINT", "SYSTEM_DEFAULT")
@@ -144,3 +148,7 @@ ARGF.each_line do |line|
     puts o
   end
 end
+
+result = RubyProf.stop
+printer = RubyProf::FlatPrinter.new(result)
+printer.print(STDERR)
